@@ -11,7 +11,7 @@ npm install fis3-hook-node_modules -g
 暂时`process`, `buffer`等node全局变量的兼容还需手动安装依赖模块(之后会升级fis3已实现自动安装)
 请安装至你的项目目录下面
 ```bash
-npm install process buffer is-buffer --save
+npm install process buffer is-buffer object-assign --save
 ```
 
 # Dependencies

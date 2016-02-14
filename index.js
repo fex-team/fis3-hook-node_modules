@@ -7,7 +7,37 @@ var fs = require('fs');
 var assign = require('object-assign');
 var _ = require('lodash');
 var componentsInfo = null;
-//var componentsInfo = JSON.parse(execSync('npm list --json --production'));
+var disabled = [];
+
+var vars = {
+  process: function () {
+    return 'var process = require(\'process/browser\');';
+  },
+  global: function () {
+    return 'var global = typeof global !== "undefined" ? global : '
+      + 'typeof self !== "undefined" ? self : '
+      + 'typeof window !== "undefined" ? window : {};'
+      ;
+  },
+  'Buffer.isBuffer': function () {
+    return 'Buffer = Buffer || {}; Buffer.isBuffer = require("is-buffer");';
+  },
+  Buffer: function () {
+    return 'var assign = require("object-assign"); ' +
+      'var Buffer = assign(Buffer || {}, require("buffer").Buffer);';
+  }
+};
+
+var replaceVars = {
+  __filename: function (file, basedir) {
+    var filename = '/' + path.relative(basedir, file);
+    return JSON.stringify(filename);
+  },
+  __dirname: function (file, basedir) {
+    var dir = path.dirname('/' + path.relative(basedir, file));
+    return JSON.stringify(dir);
+  }
+}
 
 function getComponentsInfo (fis, opts) {
   var rootDir = moduleRoot = path.join(fis.project.getProjectPath(), opts.baseUrl || '.');
@@ -18,6 +48,7 @@ function getComponentsInfo (fis, opts) {
   }
 
   function find (root, dependencies, info) {
+    var nodeModulesDir = path.join(root, 'node_modules');
     var modules = dependencies.map(function (name) {
       return path.join(root, 'node_modules', name);
     })
@@ -65,6 +96,33 @@ function getComponentsInfo (fis, opts) {
   return componentsInfo;
 }
 
+function getEntrance (json, rest) {
+  if (json.browser) {
+    var browser = json.browser;
+
+    if (typeof browser === 'string') {
+      return browser
+    }
+
+    if (_.isObject(browser)) {
+      var result = [];
+
+      for (var key in browser) {
+        if (browser.hasOwnProperty(key)) {
+          console.log(key, rest);
+          if (key === rest) {
+            return browser[key];
+          }
+
+          if (key === rest && !browser[key]) {
+            return false;
+          }
+        }
+      }
+    }
+  }
+  return json.main;
+}
 
 function getPackageJSON(basedir) {
   var jsonPath = path.join(basedir, 'package.json');
@@ -205,18 +263,6 @@ function checkPackageJSON (dirname) {
   return fs.existsSync(path.join(dirname, 'package.json'));
 }
 
-//function findNodeModules (info, file, opts) {
-//  var packages = opts.packages;
-//
-//  var rest = info.rest;
-//  var dirname = info.dirname;
-//
-//  if (/^[^\.\/]+$/.test(rest)) {
-//
-//  }
-//}
-
-
 function onFileLookUp(info, file) {
   // 如果已经找到了，没必要再找了。
   if (info.file || file && file.useShortPath === false) {
@@ -230,9 +276,17 @@ function onFileLookUp(info, file) {
     var resolved;
     var filePath;
 
+    // 动态加载不支持
+    if (cName === '.') {
+      return;
+    }
+
     if (moduleMap[cName]) {
-      var relaDir = info.dirname.split('/');
+      var dirname = file.dirname;
+      var relaDir = dirname.split('/');
       var moduleDir = null;
+      var moduleIndex = 0;
+      var cMap = moduleMap[cName];
 
       do {
         var isModule = checkPackageJSON(relaDir.join('/'));
@@ -264,11 +318,20 @@ function onFileLookUp(info, file) {
 
       if (!subpath) {
         var json = getPackageJSON(path.join(moduleRoot, modulePath));
-        filePath = path.join(modulePath, json.main || 'index')
+        var entrance = getEntrance(json, info.rest);
+        if (!entrance) {
+          disabled.push(info.rest);
+        }
+
+        filePath = path.join(modulePath, entrance || 'index')
       }
       else {
         filePath = path.join(modulePath, subpath)
       }
+    }
+
+    if (!filePath) {
+      throw new Error('missing file: ' + cName + '\n');
     }
 
     resolved = _findResource(filePath)
@@ -281,9 +344,35 @@ function onFileLookUp(info, file) {
   }
 }
 
+function onPreprocess (file) {
+  var content = file.getContent().toString();
+  var pushContent = [];
+  var rest = file.rest;
+  var basedir = moduleRoot;
+
+  Object.keys(vars).forEach(function (name) {
+    if (RegExp('\\b' + name + '\\b').test(content)) {
+      pushContent.push(vars[name](rest, basedir))
+    }
+  })
+
+  Object.keys(replaceVars).forEach(function (name) {
+    content = content.replace(name, replaceVars[name](rest, basedir));
+  })
+
+  disabled.forEach(function (name) {
+    content = content.replace(new RegExp("require\\(\\s?['\"]" + name.replace('.', '\\.') + "['\"]\\s?\\)", "g"), '{}');
+  })
+
+  content = pushContent.join('\n') + '\n' + content;
+
+  file.setContent(content);
+}
+
 module.exports = function (fis, opts) {
   fis.on('release:start', onReleaseStart.bind(null, fis, opts));
   fis.on('lookup:file', onFileLookUp);
+  fis.on('proccess:start', onPreprocess);
 
   fis.set('component.type', 'node_modules');
 };
