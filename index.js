@@ -8,6 +8,7 @@ var assign = require('object-assign');
 var _ = require('lodash');
 var componentsInfo = null;
 var disabled = [];
+var replaced = [];
 
 var vars = {
   process: function () {
@@ -15,16 +16,15 @@ var vars = {
   },
   global: function () {
     return 'var global = typeof global !== "undefined" ? global : '
-      + 'typeof self !== "undefined" ? self : '
-      + 'typeof window !== "undefined" ? window : {};'
-      ;
+        + 'typeof self !== "undefined" ? self : '
+        + 'typeof window !== "undefined" ? window : {};'
+        ;
   },
   'Buffer.isBuffer': function () {
-    return 'Buffer = Buffer || {}; Buffer.isBuffer = require("is-buffer");';
+    return 'Buffer.isBuffer = require("is-buffer");';
   },
   Buffer: function () {
-    return 'var assign = require("object-assign"); ' +
-      'var Buffer = assign(Buffer || {}, require("buffer").Buffer);';
+    return 'var Buffer = require("buffer").Buffer;';
   }
 };
 
@@ -97,6 +97,8 @@ function getComponentsInfo (fis, opts) {
 }
 
 function getEntrance (json, rest) {
+  var main = json.main;
+
   if (json.browser) {
     var browser = json.browser;
 
@@ -105,23 +107,36 @@ function getEntrance (json, rest) {
     }
 
     if (_.isObject(browser)) {
-      var result = [];
 
       for (var key in browser) {
         if (browser.hasOwnProperty(key)) {
-          console.log(key, rest);
-          if (key === rest) {
-            return browser[key];
+          if (key === main) {
+            main = browser[key];
+            continue;
           }
 
-          if (key === rest && !browser[key]) {
-            return false;
+          if (!browser[key] && indexOf(disabled, {[key]: browser[key]}) < 0) {
+            disabled.push({[key]: browser[key]});
+          }
+          else if (indexOf(replaced, {[key]: browser[key]}) < 0){
+            replaced.push({[key]: browser[key]});
           }
         }
       }
     }
   }
-  return json.main;
+
+  function indexOf (arr, obj) {
+    for (var i = 0,len = arr.length; i < len; i ++) {
+      if (_.isEqual(arr[i], obj)) {
+        return i;
+      }
+    }
+
+    return -1;
+  }
+
+  return main;
 }
 
 function getPackageJSON(basedir) {
@@ -269,7 +284,15 @@ function onFileLookUp(info, file) {
     return;
   }
 
-  var m = /^([0-9a-zA-Z\.\-_]+)(?:\/(.+))?$/.exec(info.rest);
+  var rest = info.rest;
+
+  replaced.forEach(function (val) {
+    if (val[info.rest]) {
+      rest = val[info.rest];
+    }
+  });
+
+  var m = /^([0-9a-zA-Z\.\-_]+)(?:\/(.+))?$/.exec(rest);
   if (m) {
     var cName = m[1];
     var subpath = m[2];
@@ -285,8 +308,6 @@ function onFileLookUp(info, file) {
       var dirname = file.dirname;
       var relaDir = dirname.split('/');
       var moduleDir = null;
-      var moduleIndex = 0;
-      var cMap = moduleMap[cName];
 
       do {
         var isModule = checkPackageJSON(relaDir.join('/'));
@@ -299,6 +320,7 @@ function onFileLookUp(info, file) {
       }
       while (relaDir.length > 0 && !moduleDir);
 
+      var moduleName = moduleDir.indexOf('node_modules') >= 0 ? moduleDir.split('/').pop() : cName;
       var rleaModulePath = createPath(moduleDir);
       var targetPath = null;
 
@@ -317,10 +339,11 @@ function onFileLookUp(info, file) {
       var modulePath = moduleInfo.modulePath;
 
       if (!subpath) {
-        var json = getPackageJSON(path.join(moduleRoot, modulePath));
-        var entrance = getEntrance(json, info.rest);
+        var json = getPackageJSON(path.join(moduleRoot, modulePath))
+
+        var entrance = getEntrance(json, rest);
         if (!entrance) {
-          disabled.push(info.rest);
+          disabled.push(rest);
         }
 
         filePath = path.join(modulePath, entrance || 'index')
@@ -353,7 +376,7 @@ function onPreprocess (file) {
   var basedir = moduleRoot;
 
   Object.keys(vars).forEach(function (name) {
-    if (RegExp('\\b' + name + '\\b').test(content)) {
+    if (RegExp('\\b' + name + '\\b').test(content) && !(file.fullname.indexOf(name.toLowerCase()) >= 0)) {
       pushContent.push(vars[name](rest, basedir))
     }
   })
