@@ -331,7 +331,9 @@ function onFileLookUp(info, file) {
     }
 
     if (!filePath) {
-      throw new Error('missing file: ' + cName + '\n');
+      var errmsg = cName + (subpath ? subpath : '');
+
+      throw new Error('\n missing file: ' + errmsg + '\n');
     }
 
     resolved = _findResource(filePath)
