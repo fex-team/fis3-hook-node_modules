@@ -61,6 +61,7 @@ fis.hook('node_modules')
 
 ### 基本的配置
 
+
 ```
 // 添加commonjs支持
 fis.hook('commonjs', {
