@@ -21,13 +21,6 @@ npm install process buffer is-buffer object-assign --save
 
 # Usage
 
-使用这个插件之前需要先禁用fis3默认的`fis-hook-components`
-
-```js
-fis.unhook('components')
-fis.hook('node_modules')
-```
-
 添加commonjs支持 (需要先安装fis3-hook-commonjs)
 
 ```js
@@ -44,6 +37,15 @@ fis.match('/{node_modules}/**.js', {
 });
 ```
 
+禁用fis3默认的`fis-hook-components`
+```js
+fis.unhook('components')
+fis.hook('node_modules')
+```
+
+## Tips
+
+`fis.hook('commonjs')` 一定要在 `fis.hook('node_modules')`之前, 否则会出现文件找不到的问题 
 
 
 # 如何像webpack那样开发
@@ -60,10 +62,6 @@ fis.match('/{node_modules}/**.js', {
 ### 基本的配置
 
 ```
-// 禁用components
-fis.unhook('components')
-fis.hook('node_modules')
-
 // 添加commonjs支持
 fis.hook('commonjs', {
     extList: ['.js', '.jsx', '.es', '.ts', '.tsx']
@@ -89,5 +87,9 @@ fis.match('*.{js,jsx,ts,tsx,es}', {
 fis.match('::package', {
     postpackager: fis.plugin('loader')
 });
+
+// 禁用components
+fis.unhook('components')
+fis.hook('node_modules')
 
 ```
