@@ -1,7 +1,6 @@
 var path = require('path');
 var execSync = require('child_process').execSync;
 var resolve = require('resolve');
-var moduleMap = {};
 var moduleRoot;
 var fs = require('fs');
 var assign = require('object-assign');
@@ -9,6 +8,9 @@ var _ = require('lodash');
 var componentsInfo = null;
 var disabled = [];
 var replaced = [];
+var moduleVersion = {};
+var moduleMaps = {};
+var npmVersion = null;
 
 var vars = {
   process: function () {
@@ -39,21 +41,53 @@ var replaceVars = {
   }
 }
 
+function checkNpmVersion (fis, opts) {
+  moduleRoot = path.join(fis.project.getProjectPath(), opts.baseUrl || '.');
+
+  var node_modules = fs.readdirSync(path.join(moduleRoot, 'node_modules')).map(function (val) {
+    return path.join(moduleRoot, 'node_modules', val);
+  }).filter(function (val) {
+    var jsonPath = path.join(val, 'package.json');
+    return fs.existsSync(jsonPath)
+  })
+
+  var rootJSON = getPackageJSON(moduleRoot);
+  var specifiedDependencies = Object.keys(rootJSON.dependencies).concat(Object.keys(rootJSON.devDependencies));
+
+  return _.uniq(specifiedDependencies).length === _.uniq(node_modules).length;
+}
+
+function indexOfCollection (arr, obj, name) {
+  for (var i = 0,len = arr.length; i < len; i ++) {
+    if (name) {
+      if (_.isEqual(arr[i][name], obj[name])) {
+        return i;
+      }
+    }
+    else {
+      if (_.isEqual(arr[i], obj)) {
+        return i;
+      }
+    }
+  }
+
+  return -1;
+}
+
 function getComponentsInfo (fis, opts) {
-  var rootDir = moduleRoot = path.join(fis.project.getProjectPath(), opts.baseUrl || '.');
+  var rootDir = moduleRoot;
+
   var rootJson = getPackageJSON(rootDir);
 
-  var componentsInfo = {
+  componentsInfo = {
     version: rootJson.version
   }
 
-  function find (root, dependencies, info) {
-    var nodeModulesDir = path.join(root, 'node_modules');
+  function _find (root, dependencies, info) {
     var modules = dependencies.map(function (name) {
       return path.join(root, 'node_modules', name);
-    })
+    });
 
-    // 尝试内部搜索
     modules.forEach(function (val, index) {
       if (!checkPackageJSON(val)) {
         return;
@@ -64,34 +98,62 @@ function getComponentsInfo (fis, opts) {
       var name = json.name;
 
       if (!info.dependencies) {
-        info.dependencies = {}
+        info.dependencies = {};
       }
 
-      info.dependencies[name] = {
+      // 如果moduleVersion中一个模块是空的, 那说明还没有这个模块,
+      // 数组个数为一, 说明在root下面
+      // 数组个数大于一, 说明还有一些其他版本分布在其他模块内部
+      if (!moduleVersion[name]) {
+        moduleVersion[name] = [];
+      }
+
+      if (!moduleMaps[name]) {
+        moduleMaps[name] = [];
+      }
+
+      var versionObj = {
         version: version,
-        location: val
+        name: name,
+        modulePath: val
       }
 
-      if (json.dependencies && Object.keys(json.dependencies).length > 0) {
-        // 查找依赖的姿势:
-        // 1. 当前目录下node_modules查找
-        // 2. 回到根目录node_modules查找
-        var subDependencies = Object.keys(json.dependencies)
-        var installedDepencies = subDependencies.filter(function (name) {
-          var subModulePackage = path.join(val, 'node_modules', name, 'package.json');
+      // 重复版本的模块直接忽略
+      if (indexOfCollection(moduleVersion[name], versionObj, 'version') < 0) {
+        info.dependencies[name] = {
+          version: version,
+          location: val,
+          _dependencies: json.dependencies
+        }
+        moduleVersion[name].push(versionObj);
+        moduleMaps[name].push(createPath(val));
+      }
 
-          return fs.existsSync(subModulePackage);
+      // 查找模块内部依赖
+      if (json.dependencies && Object.keys(json.dependencies).length > 0 && info.dependencies[name]) {
+        var rawSubDependencies = Object.keys(json.dependencies);
+
+        // 根据是否存在于moduleVerions来判断是否已经找到相关模块
+        var rootDependencies = rawSubDependencies.filter(function (sname) {
+          return !moduleVersion[sname] && !checkPackageJSON(path.join(moduleRoot, 'node_modules', sname));
         })
-        var rootDependencies = _.difference(installedDepencies, subDependencies);
 
-        find(root, rootDependencies, info.dependencies[name]);
-        find(val, installedDepencies, info.dependencies[name]);
+        var subDependencies = _.difference(rawSubDependencies, rootDependencies);
+
+        if (npmVersion === '2') {
+          _find(val, rootDependencies, componentsInfo);
+        }
+        else {
+          _find(root, rootDependencies, componentsInfo);
+        }
+
+        _find(val, subDependencies, info.dependencies[name])
       }
-    })
 
+    })
   }
 
-  find(rootDir, Object.keys(rootJson.dependencies), componentsInfo);
+  _find(rootDir, Object.keys(rootJson.dependencies), componentsInfo);
 
   return componentsInfo;
 }
@@ -115,25 +177,15 @@ function getEntrance (json, rest) {
             continue;
           }
 
-          if (!browser[key] && indexOf(disabled, {[key]: browser[key]}) < 0) {
+          if (!browser[key] && indexOfCollection(disabled, {[key]: browser[key]}) < 0) {
             disabled.push({[key]: browser[key]});
           }
-          else if (indexOf(replaced, {[key]: browser[key]}) < 0){
+          else if (indexOfCollection(replaced, {[key]: browser[key]}) < 0){
             replaced.push({[key]: browser[key]});
           }
         }
       }
     }
-  }
-
-  function indexOf (arr, obj) {
-    for (var i = 0,len = arr.length; i < len; i ++) {
-      if (_.isEqual(arr[i], obj)) {
-        return i;
-      }
-    }
-
-    return -1;
   }
 
   return main;
@@ -144,71 +196,82 @@ function getPackageJSON(basedir) {
   return JSON.parse(fs.readFileSync(jsonPath));
 }
 
-function findModuleDir(name, basedir) {
-  return path.join(basedir, 'node_modules', name);
+function getProjectRelativePath (dirname) {
+  return '/' + path.relative(moduleRoot, dirname);
 }
 
 function onReleaseStart(fis, opts) {
   // 读取组件信息, 这是项目路径
-  componentsInfo = getComponentsInfo(fis, opts);
 
-  var packages = {};
+  npmVersion = checkNpmVersion(fis, opts) ? '2' : '3';
 
-  function findResource(root, parent, parentPath, pathMap) {
-    if (!root.packages) {
-      root.packages = [];
-    }
+  getComponentsInfo(fis, opts);
 
-    for (var name in parent.dependencies) {
-      if (parent.dependencies.hasOwnProperty(name)) {
-        var moduleAbsolutePath = findModuleDir(name, parentPath);
-        var modulePath = path.relative(moduleRoot, moduleAbsolutePath);
-        var mainFile = moduleAbsolutePath.split('/').pop();
-        var packagesIndex = root.packages.length;
-
-        var version = parent.dependencies[name].version;
-        var indexStr = name + '@' + version;
-        var mapStr = pathMap + '/' + indexStr;
-
-        // 基于项目的绝对路径
-        parent.dependencies[name].modulePath = path.join('/', modulePath);
-
-        if (!moduleMap[name]) {
-          moduleMap[name] = [];
-        }
-
-        if (moduleMap[name].indexOf(mapStr) < 0) {
-          moduleMap[name].push(mapStr);
-        }
-
-        root.packages.push({
-          name: name,
-          main: mainFile,
-          location: modulePath
-        });
-
-        if (parent.dependencies[name].dependencies) {
-          findResource(root.packages[packagesIndex], parent.dependencies[name], path.join(parentPath, 'node_modules', name), mapStr);
-        }
-      }
-    }
-  }
-
-  findResource(packages, componentsInfo, fis.project.getProjectPath(), "root@" + componentsInfo.version);
-
-  fis.emit('node_modules:info', packages);
+//  var packages = {};
+//
+//  function findResource(root, parent, parentPath, pathMap) {
+//    if (!root.packages) {
+//      root.packages = [];
+//    }
+//
+//    for (var name in parent.dependencies) {
+//      if (parent.dependencies.hasOwnProperty(name)) {
+//        var moduleAbsolutePath = findModuleDir(name, parentPath);
+//        var modulePath = path.relative(moduleRoot, moduleAbsolutePath);
+//        var mainFile = moduleAbsolutePath.split('/').pop();
+//        var packagesIndex = root.packages.length;
+//
+//        var version = parent.dependencies[name].version;
+//        var indexStr = name + '@' + version;
+//        var mapStr = pathMap + '/' + indexStr;
+//
+//        // 基于项目的绝对路径
+//        parent.dependencies[name].modulePath = path.join('/', modulePath);
+//
+//        if (!moduleMap[name]) {
+//          moduleMap[name] = [];
+//        }
+//
+//        if (moduleMap[name].indexOf(mapStr) < 0) {
+//          moduleMap[name].push(mapStr);
+//        }
+//
+//        root.packages.push({
+//          name: name,
+//          main: mainFile,
+//          location: modulePath
+//        });
+//
+//        if (parent.dependencies[name].dependencies) {
+//          findResource(root.packages[packagesIndex], parent.dependencies[name], path.join(parentPath, 'node_modules', name), mapStr);
+//        }
+//      }
+//    }
+//  }
+//
+//  findResource(packages, componentsInfo, fis.project.getProjectPath(), "root@" + componentsInfo.version);
+//
+//  fis.emit('node_modules:info', packages);
 }
 
 function followPath(path) {
   var paths = path.split('/')
   var target = null
-  var root = paths.shift()
+
+  paths.shift();
 
   function find(root, next) {
-    var module = next.shift()
-    var name = module.split('@')[0]
+    var module = next.shift();
+    var name = module.split('@')[0];
+    var version = module.split('@')[1];
+    var findOne;
 
-    var findOne = root[name]
+    if (root.dependencies && root.dependencies[name]) {
+      findOne = root.dependencies[name]
+    }
+    else {
+      findOne = componentsInfo.dependencies[name];
+    }
 
     if (next.length == 0) {
       if (findOne) {
@@ -218,10 +281,10 @@ function followPath(path) {
       return;
     }
 
-    find(findOne.dependencies, next)
+    find(findOne, next)
   }
 
-  find(componentsInfo.dependencies, paths)
+  find(componentsInfo, paths)
 
   return target
 }
@@ -240,17 +303,25 @@ function createPath (dirname) {
 
     function find (root, next) {
       var moduleName = next.shift();
-      var module = root[moduleName];
+      var module;
+
+      if (root.dependencies && root.dependencies[moduleName]) {
+        module = root.dependencies[moduleName];
+      }
+      else {
+        module = componentsInfo.dependencies[moduleName];
+      }
+
       var moduleVersion = module.version;
 
       target = moduleName + '@' + moduleVersion;
 
       if (next.length > 0) {
-        find(root[moduleName].dependencies, next);
+        find(module, next);
       }
     }
 
-    find(componentsInfo.dependencies, mPath)
+    find(componentsInfo, mPath)
 
     return target;
   }).join('/');
@@ -304,10 +375,14 @@ function onFileLookUp(info, file) {
       return;
     }
 
-    if (moduleMap[cName]) {
+    if (moduleVersion[cName]) {
       var dirname = file.dirname;
       var relaDir = dirname.split('/');
       var moduleDir = null;
+
+      if (dirname.indexOf('react-date-range') >= 0) {
+        debugger;
+      }
 
       do {
         var isModule = checkPackageJSON(relaDir.join('/'));
@@ -324,22 +399,24 @@ function onFileLookUp(info, file) {
       var rleaModulePath = createPath(moduleDir);
       var targetPath = null;
 
-      var maps = moduleMap[cName].filter(function (val) {
-        return val.replace(rleaModulePath, '') !== val;
+      var maps = moduleMaps[cName].map(function (val) {
+        return val.replace(rleaModulePath, '');
+      }).sort(function (pre, next) {
+        return pre.length > next.length;
       })
 
       if (maps.length > 0) {
-        targetPath = maps.shift();
+        targetPath = rleaModulePath + maps.shift();
       }
       else {
-        targetPath = moduleMap[cName][0];
+        targetPath = moduleMaps[cName][0];
       }
 
       var moduleInfo = followPath(targetPath);
-      var modulePath = moduleInfo.modulePath;
+      var modulePath = moduleInfo.location;
 
       if (!subpath) {
-        var json = getPackageJSON(path.join(moduleRoot, modulePath))
+        var json = getPackageJSON(modulePath)
 
         var entrance = getEntrance(json, rest);
         if (!entrance) {
@@ -359,7 +436,7 @@ function onFileLookUp(info, file) {
       throw new Error('\n missing file: ' + errmsg + '\n');
     }
 
-    resolved = _findResource(filePath)
+    resolved = _findResource(getProjectRelativePath(filePath))
 
     // 根据规则找到了。
     if (resolved.file) {
