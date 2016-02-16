@@ -45,7 +45,7 @@ fis.hook('node_modules')
 
 ## Tips
 
-`fis.hook('commonjs')` 一定要在 `fis.hook('node_modules')`之前, 否则会出现文件找不到的问题 
+`fis.hook('commonjs')` 一定要在 `fis.hook('node_modules')`之前, 否则会出现文件找不到的问题
 
 
 # 如何像webpack那样开发
