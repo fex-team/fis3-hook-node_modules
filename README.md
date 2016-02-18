@@ -2,7 +2,7 @@
 
 fis3 对npm的node_modules模块的支持
 
-[demo]()
+[demo](/demo)
 
 # Install
 
