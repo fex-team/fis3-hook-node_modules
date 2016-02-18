@@ -1,5 +1,4 @@
 var path = require('path');
-var execSync = require('child_process').execSync;
 var resolve = require('resolve');
 var moduleRoot;
 var fs = require('fs');
@@ -202,56 +201,64 @@ function getProjectRelativePath (dirname) {
 
 function onReleaseStart(fis, opts) {
   // 读取组件信息, 这是项目路径
-
   npmVersion = checkNpmVersion(fis, opts) ? '2' : '3';
 
-  getComponentsInfo(fis, opts);
+  console.log('detect your installed node_modules type: ', 'npm v' + npmVersion + '.x');
 
-//  var packages = {};
-//
-//  function findResource(root, parent, parentPath, pathMap) {
-//    if (!root.packages) {
-//      root.packages = [];
-//    }
-//
-//    for (var name in parent.dependencies) {
-//      if (parent.dependencies.hasOwnProperty(name)) {
-//        var moduleAbsolutePath = findModuleDir(name, parentPath);
-//        var modulePath = path.relative(moduleRoot, moduleAbsolutePath);
-//        var mainFile = moduleAbsolutePath.split('/').pop();
-//        var packagesIndex = root.packages.length;
-//
-//        var version = parent.dependencies[name].version;
-//        var indexStr = name + '@' + version;
-//        var mapStr = pathMap + '/' + indexStr;
-//
-//        // 基于项目的绝对路径
-//        parent.dependencies[name].modulePath = path.join('/', modulePath);
-//
-//        if (!moduleMap[name]) {
-//          moduleMap[name] = [];
-//        }
-//
-//        if (moduleMap[name].indexOf(mapStr) < 0) {
-//          moduleMap[name].push(mapStr);
-//        }
-//
-//        root.packages.push({
-//          name: name,
-//          main: mainFile,
-//          location: modulePath
-//        });
-//
-//        if (parent.dependencies[name].dependencies) {
-//          findResource(root.packages[packagesIndex], parent.dependencies[name], path.join(parentPath, 'node_modules', name), mapStr);
-//        }
-//      }
-//    }
-//  }
-//
-//  findResource(packages, componentsInfo, fis.project.getProjectPath(), "root@" + componentsInfo.version);
-//
-//  fis.emit('node_modules:info', packages);
+  disabled = [];
+  replaced = [];
+  moduleVersion = {};
+  moduleMaps = {};
+
+  componentsInfo = getComponentsInfo(fis, opts);
+
+  var packages = {};
+
+  function findResource(root, parent) {
+    if (!root.packages) {
+      root.packages = [];
+    }
+
+    var dependencies = {};
+
+    for (var subdep in parent.dependencies) {
+      if (parent.dependencies.hasOwnProperty(subdep)) {
+        dependencies[subdep] = parent.dependencies[subdep];
+      }
+    }
+
+    for (var rootdep in parent._dependencies) {
+      if (parent._dependencies.hasOwnProperty(rootdep)) {
+        if (!dependencies[rootdep]) {
+          dependencies[rootdep] = componentsInfo.dependencies[rootdep];
+        }
+      }
+    }
+
+    for (var name in dependencies) {
+      if (dependencies.hasOwnProperty(name)) {
+        var moduleAbsolutePath = dependencies[name].location;
+        var modulePath = path.relative(moduleRoot, moduleAbsolutePath);
+        var moduleIndexPath = resolve.sync(name, {basedir: moduleAbsolutePath});
+        var mainFile = moduleIndexPath.split('/').pop();
+        var packagesIndex = root.packages.length;
+
+        root.packages.push({
+          name: name,
+          main: mainFile,
+          location: modulePath
+        });
+
+        if (dependencies[name]._dependencies) {
+          findResource(root.packages[packagesIndex], dependencies[name]);
+        }
+      }
+    }
+  }
+
+  findResource(packages, componentsInfo, fis.project.getProjectPath());
+
+  fis.emit('node_modules:info', packages);
 }
 
 function followPath(path) {
@@ -380,10 +387,6 @@ function onFileLookUp(info, file) {
       var relaDir = dirname.split('/');
       var moduleDir = null;
 
-      if (dirname.indexOf('react-date-range') >= 0) {
-        debugger;
-      }
-
       do {
         var isModule = checkPackageJSON(relaDir.join('/'));
         if (isModule) {
@@ -395,7 +398,6 @@ function onFileLookUp(info, file) {
       }
       while (relaDir.length > 0 && !moduleDir);
 
-      var moduleName = moduleDir.indexOf('node_modules') >= 0 ? moduleDir.split('/').pop() : cName;
       var rleaModulePath = createPath(moduleDir);
       var targetPath = null;
 
@@ -431,7 +433,7 @@ function onFileLookUp(info, file) {
     }
 
     if (!filePath) {
-      var errmsg = cName + (subpath ? subpath : '');
+      var errmsg = cName + (subpath ? '/' + subpath : '');
 
       throw new Error('\n missing file: ' + errmsg + '\n');
     }
