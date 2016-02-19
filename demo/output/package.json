@@ -1,4 +1,3 @@
-var process = require('process/browser');
 {
   "name": "demo",
   "version": "1.0.0",

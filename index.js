@@ -454,6 +454,10 @@ function onPreprocess (file) {
   var rest = file.rest;
   var basedir = moduleRoot;
 
+  if (!file.isJsLike) {
+    return;
+  }
+
   Object.keys(vars).forEach(function (name) {
     if (RegExp('\\b' + name + '\\b').test(content) && !(file.fullname.indexOf(name.toLowerCase()) >= 0)) {
       pushContent.push(vars[name](rest, basedir))
