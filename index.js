@@ -176,11 +176,15 @@ function getEntrance (json, rest) {
             continue;
           }
 
-          if (!browser[key] && indexOfCollection(disabled, {[key]: browser[key]}) < 0) {
-            disabled.push({[key]: browser[key]});
+          var obj = {};
+
+          obj[key] = browser[key];
+
+          if (!browser[key] && indexOfCollection(disabled, obj) < 0) {
+            disabled.push(obj);
           }
-          else if (indexOfCollection(replaced, {[key]: browser[key]}) < 0){
-            replaced.push({[key]: browser[key]});
+          else if (indexOfCollection(replaced, obj) < 0){
+            replaced.push(obj);
           }
         }
       }
@@ -239,19 +243,24 @@ function onReleaseStart(fis, opts) {
       if (dependencies.hasOwnProperty(name)) {
         var moduleAbsolutePath = dependencies[name].location;
         var modulePath = path.relative(moduleRoot, moduleAbsolutePath);
-        var moduleIndexPath = resolve.sync(name, {basedir: moduleAbsolutePath});
-        var mainFile = moduleIndexPath.split('/').pop();
-        var packagesIndex = root.packages.length;
+        resolve(name, {basedir: moduleAbsolutePath}, function (err, moduleIndexPath) {
+          if (err) {
+            return false;
+          }
 
-        root.packages.push({
-          name: name,
-          main: mainFile,
-          location: modulePath
+          var mainFile = moduleIndexPath.split('/').pop();
+          var packagesIndex = root.packages.length;
+
+          root.packages.push({
+            name: name,
+            main: mainFile,
+            location: modulePath
+          });
+
+          if (dependencies[name]._dependencies) {
+            findResource(root.packages[packagesIndex], dependencies[name]);
+          }
         });
-
-        if (dependencies[name]._dependencies) {
-          findResource(root.packages[packagesIndex], dependencies[name]);
-        }
       }
     }
   }
