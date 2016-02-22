@@ -1,6 +1,6 @@
 {
   "name": "fis3-hook-node_modules",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "fis3 node_modules support",
   "main": "index.js",
   "directories": {
