@@ -115,7 +115,6 @@ function getComponentsInfo (fis, opts) {
 
     modules.forEach(function (val, index) {
       if (!checkPackageJSON(val)) {
-        console.log('error', val);
         return;
       }
 
@@ -181,8 +180,6 @@ function getComponentsInfo (fis, opts) {
 
   _find(rootDir, Object.keys(rootJson.dependencies), componentsInfo);
 
-  fs.writeFileSync('./package.js', JSON.stringify(componentsInfo))
-
   return componentsInfo;
 }
 
@@ -205,11 +202,15 @@ function getEntrance (json, rest) {
             continue;
           }
 
-          if (!browser[key] && indexOfCollection(disabled, {[key]: browser[key]}) < 0) {
-            disabled.push({[key]: browser[key]});
+          var obj = {};
+
+          obj[key] = browser[key];
+
+          if (!browser[key] && indexOfCollection(disabled, obj) < 0) {
+            disabled.push(obj);
           }
-          else if (indexOfCollection(replaced, {[key]: browser[key]}) < 0) {
-            replaced.push({[key]: browser[key]});
+          else if (indexOfCollection(replaced, obj) < 0) {
+            replaced.push(obj);
           }
         }
       }
