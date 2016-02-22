@@ -43,17 +43,43 @@ var replaceVars = {
 function checkNpmVersion (fis, opts) {
   moduleRoot = path.join(fis.project.getProjectPath(), opts.baseUrl || '.');
 
-  var node_modules = fs.readdirSync(path.join(moduleRoot, 'node_modules')).map(function (val) {
-    return path.join(moduleRoot, 'node_modules', val);
-  }).filter(function (val) {
-    var jsonPath = path.join(val, 'package.json');
-    return fs.existsSync(jsonPath)
+  var rootDir = moduleRoot;
+  var rootJson = getPackageJSON(rootDir);
+  var npmVersion = false; // 2.x
+  var _modules = {};
+
+  function _find (root, dependencies) {
+    var modules = dependencies.map(function (name) {
+      return path.join(root, 'node_modules', name);
+    });
+
+    modules.forEach(function (val) {
+      if (!checkPackageJSON(val)) {
+        return;
+      }
+
+      var json = getPackageJSON(val);
+      var name = json.name;
+      var version = true;
+
+      _modules[name] = true;
+
+      // 查找模块内部依赖
+      if (json.dependencies && Object.keys(json.dependencies).length > 0) {
+        _find(val, Object.keys(json.dependencies));
+      }
+    })
+  }
+
+  _find(rootDir, Object.keys(rootJson.dependencies));
+
+  _.each(_modules, function (val, name) {
+    if (!checkPackageJSON(path.join(rootDir, 'node_modules', name))) {
+      npmVersion = true;
+    }
   })
 
-  var rootJSON = getPackageJSON(moduleRoot);
-  var specifiedDependencies = Object.keys(rootJSON.dependencies).concat(Object.keys(rootJSON.devDependencies));
-
-  return _.uniq(specifiedDependencies).length === _.uniq(node_modules).length;
+  return npmVersion;
 }
 
 function indexOfCollection (arr, obj, name) {
@@ -89,6 +115,7 @@ function getComponentsInfo (fis, opts) {
 
     modules.forEach(function (val, index) {
       if (!checkPackageJSON(val)) {
+        console.log('error', val);
         return;
       }
 
@@ -134,7 +161,7 @@ function getComponentsInfo (fis, opts) {
 
         // 根据是否存在于moduleVerions来判断是否已经找到相关模块
         var rootDependencies = rawSubDependencies.filter(function (sname) {
-          return !moduleVersion[sname] && !checkPackageJSON(path.join(moduleRoot, 'node_modules', sname));
+          return !moduleVersion[sname] || !checkPackageJSON(path.join(moduleRoot, 'node_modules', sname));
         })
 
         var subDependencies = _.difference(rawSubDependencies, rootDependencies);
@@ -153,6 +180,8 @@ function getComponentsInfo (fis, opts) {
   }
 
   _find(rootDir, Object.keys(rootJson.dependencies), componentsInfo);
+
+  fs.writeFileSync('./package.js', JSON.stringify(componentsInfo))
 
   return componentsInfo;
 }
@@ -176,15 +205,11 @@ function getEntrance (json, rest) {
             continue;
           }
 
-          var obj = {};
-
-          obj[key] = browser[key];
-
-          if (!browser[key] && indexOfCollection(disabled, obj) < 0) {
-            disabled.push(obj);
+          if (!browser[key] && indexOfCollection(disabled, {[key]: browser[key]}) < 0) {
+            disabled.push({[key]: browser[key]});
           }
-          else if (indexOfCollection(replaced, obj) < 0){
-            replaced.push(obj);
+          else if (indexOfCollection(replaced, {[key]: browser[key]}) < 0) {
+            replaced.push({[key]: browser[key]});
           }
         }
       }
@@ -215,59 +240,6 @@ function onReleaseStart(fis, opts) {
   moduleMaps = {};
 
   componentsInfo = getComponentsInfo(fis, opts);
-
-  var packages = {};
-
-  function findResource(root, parent) {
-    if (!root.packages) {
-      root.packages = [];
-    }
-
-    var dependencies = {};
-
-    for (var subdep in parent.dependencies) {
-      if (parent.dependencies.hasOwnProperty(subdep)) {
-        dependencies[subdep] = parent.dependencies[subdep];
-      }
-    }
-
-    for (var rootdep in parent._dependencies) {
-      if (parent._dependencies.hasOwnProperty(rootdep)) {
-        if (!dependencies[rootdep]) {
-          dependencies[rootdep] = componentsInfo.dependencies[rootdep];
-        }
-      }
-    }
-
-    for (var name in dependencies) {
-      if (dependencies.hasOwnProperty(name)) {
-        var moduleAbsolutePath = dependencies[name].location;
-        var modulePath = path.relative(moduleRoot, moduleAbsolutePath);
-        resolve(name, {basedir: moduleAbsolutePath}, function (err, moduleIndexPath) {
-          if (err) {
-            return false;
-          }
-
-          var mainFile = moduleIndexPath.split('/').pop();
-          var packagesIndex = root.packages.length;
-
-          root.packages.push({
-            name: name,
-            main: mainFile,
-            location: modulePath
-          });
-
-          if (dependencies[name]._dependencies) {
-            findResource(root.packages[packagesIndex], dependencies[name]);
-          }
-        });
-      }
-    }
-  }
-
-  findResource(packages, componentsInfo, fis.project.getProjectPath());
-
-  fis.emit('node_modules:info', packages);
 }
 
 function followPath(path) {
@@ -362,6 +334,9 @@ function _findResource(name, path) {
 }
 
 function checkPackageJSON (dirname) {
+  if (!dirname) {
+    return false;
+  }
   return fs.existsSync(path.join(dirname, 'package.json'));
 }
 
@@ -425,6 +400,10 @@ function onFileLookUp(info, file) {
 
       var moduleInfo = followPath(targetPath);
       var modulePath = moduleInfo.location;
+
+      if (cName === 'process') {
+        debugger;
+      }
 
       if (!subpath) {
         var json = getPackageJSON(modulePath)
