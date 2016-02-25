@@ -207,6 +207,7 @@ function getEntrance (json, rest) {
           obj[key] = browser[key];
 
           if (!browser[key] && indexOfCollection(disabled, obj) < 0) {
+            console.log(json)
             disabled.push(obj);
           }
           else if (indexOfCollection(replaced, obj) < 0) {
@@ -323,12 +324,20 @@ function createPath (dirname) {
   }
 }
 
-function _findResource(name, path) {
+function _findResource (name, filePath) {
   var extList = ['.js', '.jsx', '.coffee', '.css', '.sass', '.scss', '.less', '.html', '.tpl', '.vm', '.js', '.jsx', '.es', '.ts', '.tsx'];
-  var info = fis.uri(name, path);
+  var info = fis.uri(name, filePath);
+
+  var entrance = ['', 'index'];
 
   for (var i = 0, len = extList.length; i < len && !info.file; i++) {
-    info = fis.uri(name + extList[i], path);
+    info = fis.uri(name + extList[i], filePath);
+  }
+
+  for (var j = 0, jlen = extList.length; j < jlen && !info.file; j++) {
+    for (var x = 0, xlen = entrance.length; x < xlen && !info.file; x++) {
+      info = fis.uri(path.join(name, entrance[x]) + extList[j], filePath);
+    }
   }
 
   return info;
@@ -402,23 +411,19 @@ function onFileLookUp(info, file) {
       var moduleInfo = followPath(targetPath);
       var modulePath = moduleInfo.location;
 
-      if (cName === 'process') {
-        debugger;
-      }
-
       if (!subpath) {
         var json = getPackageJSON(modulePath)
 
         var entrance = getEntrance(json, rest);
-        if (!entrance) {
-          disabled.push(rest);
-        }
 
         filePath = path.join(modulePath, entrance || 'index')
       }
       else {
         filePath = path.join(modulePath, subpath)
       }
+    }
+    else {
+      filePath = resolve.sync(rest, {basedir: moduleRoot})
     }
 
     if (!filePath) {

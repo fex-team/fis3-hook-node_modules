@@ -21,6 +21,7 @@
   "author": "tb",
   "license": "ISC",
   "dependencies": {
+    "antd": "^0.12.4",
     "buffer": "^4.4.0",
     "history": "^1.17.0",
     "is-buffer": "^1.1.2",

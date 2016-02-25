@@ -4,6 +4,7 @@ import './index.scss'
 
 import image from './a.jpg'
 
+import { Button } from 'antd';
 
 
 export default class Home extends React.Component {
@@ -13,6 +14,7 @@ export default class Home extends React.Component {
                 React run wellwdwdw!dwwdwd
                 <div className="helloworld">Helloworld</div>
                 <img src={image} />
+              <Button>123</Button>
             </div>
         )
     }
