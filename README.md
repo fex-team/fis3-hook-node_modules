@@ -4,6 +4,10 @@ fis3 对npm的node_modules模块的支持
 
 [demo](/demo)
 
+[![NPM version][npm-image]][npm-url]
+
+[![NPM][nodei-image]][nodei-url]
+
 # Install
 
 ```bash
@@ -134,3 +138,8 @@ fis.match('/client/index.jsx', {
 })
 
 ```
+
+[npm-url]: https://www.npmjs.com/package/fis3-hook-node_modules
+[npm-image]: https://img.shields.io/npm/v/fis3-hook-node_modules.svg
+[nodei-image]: https://nodei.co/npm/fis3-hook-node_modules.png?downloads=true&downloadRank=true&stars=true
+[nodei-url]: https://www.npmjs.com/package/fis3-hook-node_modules
