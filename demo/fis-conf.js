@@ -54,7 +54,9 @@ fis.match('::package', {
 
 // 禁用components
 fis.unhook('components')
-fis.hook('node_modules')
+fis.hook('node_modules', {
+  useDev: true
+})
 
 fis.match('/client/index.jsx', {
   isMod: false

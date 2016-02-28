@@ -51,6 +51,10 @@ fis.hook('node_modules')
 
 `fis.hook('commonjs')` 一定要在 `fis.hook('node_modules')`之前, 否则会出现文件找不到的问题
 
+## Config
+
++ useDev  加载 devDependencies 的模块, 默认为`false`
+
 
 # 如何像webpack那样开发
 通过这个插件, fis3已经完整实现通过 `require`语法加载node_modules, css, js, image等资源文件, 并支持整个npm生态圈
