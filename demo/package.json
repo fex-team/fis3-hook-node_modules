@@ -22,7 +22,10 @@
   "license": "ISC",
   "dependencies": {
     "antd": "^0.12.4",
+    "backbone": "^1.2.3",
     "buffer": "^4.4.0",
+    "fit-cropper": "0.0.39",
+    "fit-table": "^1.1.126",
     "history": "^1.17.0",
     "is-buffer": "^1.1.2",
     "process": "^0.11.2",

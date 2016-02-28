@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "buffer": "^4.4.0",
+    "fit-table": "^1.1.128",
     "is-buffer": "^1.1.2",
     "lodash": "^4.3.0",
     "object-assign": "^4.0.1",

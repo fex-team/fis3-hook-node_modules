@@ -45,10 +45,11 @@ function checkNpmVersion (fis, opts) {
 
   var rootDir = moduleRoot;
   var rootJson = getPackageJSON(rootDir);
-  var npmVersion = false; // 2.x
-  var _modules = {};
+  var npmVersion = false; // 3.x
+  var _modulesV2 = {};
+  var _modulesV3 = {};
 
-  function _find (root, dependencies) {
+  function _findV2 (root, dependencies) {
     var modules = dependencies.map(function (name) {
       return path.join(root, 'node_modules', name);
     });
@@ -60,21 +61,55 @@ function checkNpmVersion (fis, opts) {
 
       var json = getPackageJSON(val);
       var name = json.name;
-      var version = true;
 
-      _modules[name] = true;
+      _modulesV2[name] = true;
 
       // 查找模块内部依赖
       if (json.dependencies && Object.keys(json.dependencies).length > 0) {
-        _find(val, Object.keys(json.dependencies));
+        _findV2(val, Object.keys(json.dependencies));
       }
     })
   }
 
-  _find(rootDir, Object.keys(rootJson.dependencies));
+  function _findV3 (root, dependencies) {
+    var modules = dependencies.map(function (name) {
+      return path.join(root, 'node_modules', name);
+    });
 
-  _.each(_modules, function (val, name) {
+    modules.forEach(function (val) {
+      if (!checkPackageJSON(val)) {
+        return;
+      }
+
+      var json = getPackageJSON(val);
+      var name = json.name;
+
+      _modulesV3[name] = true;
+
+      // 查找模块内部依赖
+      if (json.dependencies && Object.keys(json.dependencies).length > 0) {
+        _findV3(root, Object.keys(json.dependencies));
+      }
+    })
+  }
+
+  // 尝试用v2的方式查找
+  _findV2(rootDir, Object.keys(rootJson.dependencies));
+
+  // 尝试用v3的方式查找
+  _findV3(rootDir, Object.keys(rootJson.dependencies));
+
+  // 对比查找的差异 嵌套
+
+  var difference = _.difference(Object.keys(_modulesV2), Object.keys(_modulesV3))
+
+  if (difference > 0) {
+    console.warn('detected you had installed your node_modules with different npm versions, please remove your node_modules and reinstall')
+    process.exit(1)
+  }
+  _.each(_modulesV2, function (val, name) {
     if (!checkPackageJSON(path.join(rootDir, 'node_modules', name))) {
+      console.log(name);
       npmVersion = true;
     }
   })
