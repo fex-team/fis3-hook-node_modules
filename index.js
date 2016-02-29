@@ -487,9 +487,10 @@ function onPreprocess (file) {
   var rest = file.rest;
   var basedir = moduleRoot;
 
-  if (!file.isJsLike) {
+  if (!file.isJsLike || !file.isMod) {
     return;
   }
+
 
   Object.keys(vars).forEach(function (name) {
     if (RegExp('\\b' + name + '\\b').test(content) && !(file.fullname.indexOf(name.toLowerCase()) >= 0)) {
@@ -512,7 +513,7 @@ function onPreprocess (file) {
 
 var entry = module.exports = function (fis, opts) {
   fis.on('release:start', onReleaseStart.bind(null, fis, opts));
-  fis.on('lookup:file', onFileLookUp);
+  fis.on('lookup:file', onFileLookUp.bind(null, opts));
   fis.on('proccess:start', onPreprocess);
 
   fis.set('component.type', 'node_modules');
@@ -520,7 +521,6 @@ var entry = module.exports = function (fis, opts) {
 
 
 entry.defaultOptions = {
-
   // 加载 devDependencies 的模块
   useDev: false
 };
