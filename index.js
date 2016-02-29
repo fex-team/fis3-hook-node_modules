@@ -109,7 +109,6 @@ function checkNpmVersion (fis, opts) {
   }
   _.each(_modulesV2, function (val, name) {
     if (!checkPackageJSON(path.join(rootDir, 'node_modules', name))) {
-      console.log(name);
       npmVersion = true;
     }
   })
@@ -246,7 +245,6 @@ function getEntrance (json, rest) {
           obj[key] = browser[key];
 
           if (!browser[key] && indexOfCollection(disabled, obj) < 0) {
-            console.log(json)
             disabled.push(obj);
           }
           else if (indexOfCollection(replaced, obj) < 0) {
@@ -513,7 +511,7 @@ function onPreprocess (file) {
 
 var entry = module.exports = function (fis, opts) {
   fis.on('release:start', onReleaseStart.bind(null, fis, opts));
-  fis.on('lookup:file', onFileLookUp.bind(null, opts));
+  fis.on('lookup:file', onFileLookUp);
   fis.on('proccess:start', onPreprocess);
 
   fis.set('component.type', 'node_modules');
