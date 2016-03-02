@@ -410,7 +410,7 @@ function onFileLookUp(info, file) {
     var filePath;
 
     // 动态加载不支持
-    if (cName === '.') {
+    if (cName[0] === '.') {
       return;
     }
 
