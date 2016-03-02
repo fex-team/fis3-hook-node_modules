@@ -10,6 +10,7 @@ var replaced = [];
 var moduleVersion = {};
 var moduleMaps = {};
 var npmVersion = null;
+var lookup = require('fis3-hook-commonjs/lookup.js')
 
 var vars = {
   process: function () {
@@ -510,6 +511,18 @@ function onPreprocess (file) {
 }
 
 var entry = module.exports = function (fis, opts) {
+  lookup.lookupList = [
+    lookup.tryFisIdLookUp,
+    lookup.tryPathsLookUp,
+    lookup.tryPackagesLookUp,
+    onFileLookUp,
+    lookup.tryFolderLookUp,
+    lookup.tryNoExtLookUp,
+    lookup.tryBaseUrlLookUp,
+    lookup.tryRootLookUp
+  ];
+
+
   fis.on('release:start', onReleaseStart.bind(null, fis, opts));
   fis.on('lookup:file', onFileLookUp);
   fis.on('proccess:start', onPreprocess);

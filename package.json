@@ -11,6 +11,9 @@
   },
   "author": "",
   "license": "ISC",
+  "peerDependencies": {
+    "fis3-hook-commonjs": "^0.1.12"
+  },
   "dependencies": {
     "buffer": "^4.4.0",
     "fit-table": "^1.1.128",
