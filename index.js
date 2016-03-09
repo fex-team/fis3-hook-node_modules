@@ -522,7 +522,7 @@ var entry = module.exports = function (fis, opts) {
 
   fis.on('release:start', onReleaseStart.bind(null, fis, opts));
   fis.on('lookup:file', onFileLookUp);
-  fis.on('proccess:start', onPreprocess);
+  fis.on('process:start', onPreprocess);
 
   fis.set('component.type', 'node_modules');
 };
