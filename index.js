@@ -318,7 +318,7 @@ function followPath(path) {
 }
 
 function createPath (dirname) {
-  var relaPath = path.join('/', path.relative(moduleRoot, dirname));
+  var relaPath = path.join('/', path.relative(moduleRoot, dirname)).replace(/\\/g, '/');
 
   var modulePath = relaPath.split('/node_modules/');
   var root = 'root@' + componentsInfo.version;
