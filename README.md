@@ -67,7 +67,7 @@ npm install https://github.com/jashkenas/backbone/archive/1.3.1.tar.gz --save
 从git仓库安装
 
 ```
-npm install git:https://github.com/jashkenas/backbone --save
+npm install git+https://github.com/jashkenas/backbone --save
 ```
 
 ## Config
