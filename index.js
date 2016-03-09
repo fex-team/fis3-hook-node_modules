@@ -460,9 +460,6 @@ function onFileLookUp(info, file) {
         filePath = path.join(modulePath, subpath)
       }
     }
-    else {
-      filePath = resolve.sync(rest, {basedir: moduleRoot})
-    }
 
     if (!filePath) {
       var errmsg = cName + (subpath ? '/' + subpath : '');
