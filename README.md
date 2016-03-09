@@ -55,6 +55,21 @@ fis.hook('node_modules')
 
 `fis.hook('commonjs')` 一定要在 `fis.hook('node_modules')`之前, 否则会出现文件找不到的问题
 
+### 如何使用私有npm模块
+私有npm模块可以放在内网的git仓库,也可以直接使用http地址安装
+
+直接安装tar包
+
+```
+npm install https://github.com/jashkenas/backbone/archive/1.3.1.tar.gz --save
+```
+
+从git仓库安装
+
+```
+npm install git:https://github.com/jashkenas/backbone --save
+```
+
 ## Config
 
 + useDev  加载 devDependencies 的模块, 默认为`false`

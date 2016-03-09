@@ -31,7 +31,6 @@ fis.match('*.scss', {
     postprocessor: fis.plugin('autoprefixer')
 });
 
-
 // 添加css和image加载支持
 fis.match('*.{js,jsx,ts,tsx,es}', {
     preprocessor: [
