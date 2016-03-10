@@ -22,11 +22,11 @@ var vars = {
         + 'typeof window !== "undefined" ? window : {};'
         ;
   },
-  Buffer: function () {
-    return 'var Buffer = require("buffer").Buffer;';
-  },
   'Buffer.isBuffer': function () {
     return 'Buffer.isBuffer = require("is-buffer");';
+  },
+  Buffer: function () {
+    return 'var Buffer = require("buffer").Buffer;';
   }
 };
 
@@ -460,11 +460,14 @@ function onFileLookUp(info, file) {
         filePath = path.join(modulePath, subpath)
       }
     }
+    else {
+      filePath = resolve.sync(rest, {basedir: moduleRoot})
+    }
 
     if (!filePath) {
       var errmsg = cName + (subpath ? '/' + subpath : '');
 
-      throw new Error('\n missing file: ' + errmsg + '\n');
+      return console.log('\n missing file: ' + errmsg + '\n');
     }
 
     resolved = _findResource(getProjectRelativePath(filePath))
@@ -522,7 +525,7 @@ var entry = module.exports = function (fis, opts) {
 
   fis.on('release:start', onReleaseStart.bind(null, fis, opts));
   fis.on('lookup:file', onFileLookUp);
-  fis.on('process:start', onPreprocess);
+  fis.on('proccess:start', onPreprocess);
 
   fis.set('component.type', 'node_modules');
 };
