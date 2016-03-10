@@ -22,11 +22,11 @@ var vars = {
         + 'typeof window !== "undefined" ? window : {};'
         ;
   },
-  'Buffer.isBuffer': function () {
-    return 'Buffer.isBuffer = require("is-buffer");';
-  },
   Buffer: function () {
     return 'var Buffer = require("buffer").Buffer;';
+  },
+  'Buffer.isBuffer': function () {
+    return 'Buffer.isBuffer = require("is-buffer");';
   }
 };
 
