@@ -101,6 +101,15 @@ fis.match('/{node_modules, client}/**.js', {
     useSameNameRequire: true
 });
 
+// 只用于浏览器端的文件，无需作 node 全局变量兼容检测处理
+fis.match('/client/**.js', {
+    isBrowser: true
+});
+
+fis.match('velocity-animate/**', {
+    isBrowser: true
+});
+
 fis.match('{*.{es,jsx},/client/**.js}', {
     rExt: 'js',
     isMod: true,

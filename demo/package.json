@@ -4,8 +4,8 @@
   "description": "demo",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "fis3 release -cwd ./output & fis3 server start --type node --www ./output --no-daemon --no-browse",
-    "dev": "fis3 release qa -wcd ./output",
+    "start": "fis3 release -cd ./output & fis3 server start --type node --www ./output --no-daemon --no-browse",
+    "dev": "fis3 release qa -wLcd ./output",
     "qa": "fis3 release -wcd ./output",
     "preview": "fis3 release preview -c",
     "release": "fis3 release production"

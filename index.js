@@ -486,7 +486,7 @@ function onPreprocess (file) {
   var rest = file.rest;
   var basedir = moduleRoot;
 
-  if (!file.isJsLike || !file.isMod) {
+  if (!file.isJsLike || !file.isMod ||  file.isBrowser) {
     return;
   }
 
