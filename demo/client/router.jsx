@@ -1,11 +1,11 @@
 import React from 'react'
-import { Router, Route, IndexRoute } from 'react-router'
+import { Router, Route, IndexRoute, hashHistory } from 'react-router'
 
 import Layout from './layout.jsx'
 import Home from './routes/home/index.jsx'
 
 const routes = (
-    <Router>
+    <Router history={hashHistory}>
         <Route path="/"
                component={Layout}>
             <IndexRoute component={Home}/>
