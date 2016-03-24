@@ -154,6 +154,7 @@ function getComponentsInfo(fis, opts) {
             }
 
             var json = getPackageJSON(val);
+
             var version = json.version;
             var name = json.name;
 
@@ -409,7 +410,7 @@ function _searchPackageJsonLoop(path) {
 
 function onFileLookUp(info, file) {
     var rest = info.rest;
-    
+
     // 递归查找 package.json
     var packagejson = _searchPackageJsonLoop(file.origin)
     if (packagejson.browser) {
@@ -435,18 +436,28 @@ function onFileLookUp(info, file) {
         }
     }
 
+    // 上面已经把遗漏的相对代码定位解决
     // 如果已经找到了，没必要再找了。
     if (info.file || file && file.useShortPath === false) {
         return;
     }
 
     replaced.forEach(function (val) {
-        if (val[info.rest]) {
-            rest = val[info.rest];
+        var restArraySplit = info.rest.split('/')
+        // 如果依赖没有后缀,则试一试.js
+        if (restArraySplit[restArraySplit.length - 1].indexOf('.') === -1) {
+            if (val[info.rest + '.js']) {
+                rest = val[info.rest + '.js'];
+            }
+        } else {
+            if (val[info.rest]) {
+                rest = val[info.rest];
+            }
         }
     });
 
     var m = /^([0-9a-zA-Z\.\-_]+)(?:\/(.+))?$/.exec(rest);
+
     if (m) {
         var cName = m[1];
         var subpath = m[2];
