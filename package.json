@@ -1,0 +1,17 @@
+{
+  "name": "fis3-hook-npm",
+  "version": "1.0.0",
+  "description": "fis3 npm support",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "peerDependencies": {
+    "fis3-hook-commonjs": "^0.1.12"
+  }
+}
