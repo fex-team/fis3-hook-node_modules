@@ -2,8 +2,6 @@
 
 fis3 对npm的node_modules模块的支持
 
-[demo](/demo)
-
 [![NPM version][npm-image]][npm-url]
 
 [![NPM][nodei-image]][nodei-url]
