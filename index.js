@@ -59,7 +59,7 @@ function onFileLookUp(info, file) {
 
     var pkg = resolver.resolveSelf(file.dirname, root);
     if (pkg && pkg.json.browser && typeof pkg.json.browser === 'object') {
-        var name = info.rest;
+        var name = path.join(path.relative(pkg.dirname, file.dirname), info.rest);
         var newname;
         var browser = pkg.json.browser;
 
