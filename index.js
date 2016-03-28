@@ -53,10 +53,6 @@ function tryNpmLookUp(info, file, opts) {
 // npm browser 为 object,
 // 包内部的相对引用
 function onFileLookUp(info, file) {
-    if (info.rest[0] !== '.') {
-        return;
-    }
-
     var pkg = resolver.resolveSelf(file.dirname, root);
     if (pkg && pkg.json.browser && typeof pkg.json.browser === 'object') {
         var name = path.join(path.relative(pkg.dirname, file.dirname), info.rest);
