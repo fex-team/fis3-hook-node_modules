@@ -1,15 +1,15 @@
-# fis3-hook-npm
+# fis3-hook-node_modules
 
 fis3 对npm的node_modules模块的支持
 
 [![NPM version][npm-image]][npm-url]
 
-[![NPM][nodei-image]][nodei-url]
+[![NPM][fis3-hook-node_modules]][nodei-url]
 
 # Install
 
 ```bash
-npm install fis3-hook-npm -g
+npm install fis3-hook-node_modules -g
 ```
 
 暂时`process`, `buffer`等node全局变量的兼容还需手动安装依赖模块(之后会升级fis3已实现自动安装)
@@ -45,12 +45,12 @@ fis.match('/{node_modules}/**.js', {
 禁用fis3默认的`fis-hook-components`
 ```js
 fis.unhook('components')
-fis.hook('npm')
+fis.hook('node_modules')
 ```
 
 ## Tips
 
-`fis.hook('commonjs')` 一定要在 `fis.hook('npm')`之前, 否则会出现文件找不到的问题
+`fis.hook('commonjs')` 一定要在 `fis.hook('node_modules')`之前, 否则会出现文件找不到的问题
 
 ### 如何使用私有npm模块
 私有npm模块可以放在内网的git仓库,也可以直接使用http地址安装
@@ -72,7 +72,7 @@ npm install git+https://github.com/jashkenas/backbone --save
 
 ### 需要的插件
 
-+ fis3-hook-npm
++ fis3-hook-node_modules
 + fis3-hook-commonjs
 + fis3-postpackager-loader
 + fis3-preprocessor-js-require-css
@@ -138,7 +138,7 @@ fis.match('::package', {
 
 // 禁用components
 fis.unhook('components')
-fis.hook('npm')
+fis.hook('node_modules')
 
 fis.match('/client/index.jsx', {
   isMod: false
@@ -146,7 +146,7 @@ fis.match('/client/index.jsx', {
 
 ```
 
-[npm-url]: https://www.npmjs.com/package/fis3-hook-npm
-[npm-image]: https://img.shields.io/npm/v/fis3-hook-npm.svg
-[nodei-image]: https://nodei.co/npm/fis3-hook-npm.png?downloads=true&downloadRank=true&stars=true
-[nodei-url]: https://www.npmjs.com/package/fis3-hook-npm
+[npm-url]: https://www.npmjs.com/package/fis3-hook-node_modules
+[npm-image]: https://img.shields.io/npm/v/fis3-hook-node_modules.svg
+[nodei-image]: https://nodei.co/npm/fis3-hook-node_modules.png?downloads=true&downloadRank=true&stars=true
+[nodei-url]: https://www.npmjs.com/package/fis3-hook-node_modules
