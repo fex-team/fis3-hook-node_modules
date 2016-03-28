@@ -2,15 +2,15 @@ var path = require('path');
 var lookup = require('fis3-hook-commonjs/lookup.js');
 var resolver = require('./lib/resolver.js');
 var browserify = require('./lib/browserify.js');
-var root;
 
 function tryNpmLookUp(info, file, opts) {
     var id = info.rest;
 
-    if (/^([^\/]+)(?:\/(.*))?$/.test(id)) {
+    if (/^([^\/\.]+)(?:\/(.*))?$/.test(id)) {
         var prefix = RegExp.$1;
         var subpath = RegExp.$2;
-        var pkg = resolver.resolvePkg(prefix, file.dirname, root);
+        var currentPkg = resolver.resolveSelf(file.dirname);
+        var pkg = resolver.resolvePkg(prefix, currentPkg && currentPkg.json.dependencies && currentPkg.json.dependencies[prefix] ? currentPkg.json.dependencies[prefix] : '*', file.dirname);
         if (!pkg) {
             return info;
         }
@@ -53,7 +53,7 @@ function tryNpmLookUp(info, file, opts) {
 // npm browser 为 object,
 // 包内部的相对引用
 function onFileLookUp(info, file) {
-    var pkg = resolver.resolveSelf(file.dirname, root);
+    var pkg = resolver.resolveSelf(file.dirname);
     if (pkg && pkg.json.browser && typeof pkg.json.browser === 'object') {
         var name = path.join(path.relative(pkg.dirname, file.dirname), info.rest);
         var newname;
@@ -99,7 +99,7 @@ function onPreprocess(file) {
     }
 
     // 如果不是 npm 包,那就直接跳过.
-    var pkg = resolver.resolveSelf(file.dirname, root);
+    var pkg = resolver.resolveSelf(file.dirname);
     if (!pkg) {
         return;
     }
@@ -108,7 +108,7 @@ function onPreprocess(file) {
 }
 
 var entry = module.exports = function (fis, opts) {
-    root = fis.project.getProjectPath();
+    resolver.init(opts);
 
     lookup.lookupList = [
         lookup.tryFisIdLookUp,
@@ -129,5 +129,9 @@ var entry = module.exports = function (fis, opts) {
 
 
 entry.defaultOptions = {
-
+    // 0 只 merge 版本相同的，
+    // 1 merge 第三位版本相同的 1.1.x
+    // 2 merge 第二位版本相同的 1.x
+    // 3 只要包同名就会被 merge
+    mergeLevel: 1
 };

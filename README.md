@@ -146,6 +146,14 @@ fis.match('/client/index.jsx', {
 
 ```
 
+## 配置项说明
+
+* `mergeLevel` 默认 `1` npm 包去重。
+    * `0` 如果版本完全一致则去重。
+    * `1` patch 版本号一致则去重。相当于 `1.1.x`
+    * `2` min 版本号一致则去重。相当于 `1.x`
+    * `3` 忽略版本，只要包名一致则去重。
+
 [npm-url]: https://www.npmjs.com/package/fis3-hook-node_modules
 [npm-image]: https://img.shields.io/npm/v/fis3-hook-node_modules.svg
 [nodei-image]: https://nodei.co/npm/fis3-hook-node_modules.png?downloads=true&downloadRank=true&stars=true
