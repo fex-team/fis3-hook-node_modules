@@ -235,8 +235,6 @@ function getComponentsInfo (fis, opts) {
     _find(rootDir, Object.keys(rootJson.devDependencies), componentsInfo)
   }
 
-  fs.writeFileSync('./component.json', JSON.stringify(componentsInfo));
-
   return componentsInfo;
 }
 
