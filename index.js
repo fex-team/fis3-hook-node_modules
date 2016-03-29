@@ -55,7 +55,8 @@ function tryNpmLookUp(info, file, opts) {
 function onFileLookUp(info, file) {
     var pkg = resolver.resolveSelf(file.dirname);
     if (pkg && pkg.json.browser && typeof pkg.json.browser === 'object') {
-        var name = path.join(path.relative(pkg.dirname, file.dirname), info.rest);
+        var name = info.rest;
+        name = name[0] === '.' ? path.join(path.relative(pkg.dirname, file.dirname), name) : name;
         var newname;
         var browser = pkg.json.browser;
 
@@ -82,7 +83,9 @@ function onFileLookUp(info, file) {
             return info;
         } else if (newname) {
             delete info.file;
-            var result = lookup.findResource(newname, pkg.dirname, []);
+            var f = fis.file(path.join(pkg.dirname, 'package.json'));
+            var result = fis.project.lookup(newname, f);
+            // var result = lookup.findResource(newname, pkg.dirname, ['.js']);
 
             if (result.file) {
                 info.file = result.file;
@@ -123,6 +126,9 @@ var entry = module.exports = function (fis, opts) {
 
     fis.on('lookup:file', onFileLookUp);
     fis.on('process:start', onPreprocess);
+    fis.on('release:end', function() {
+        resolver.clearCache();
+    });
 
     fis.set('component.type', 'node_modules');
 };
