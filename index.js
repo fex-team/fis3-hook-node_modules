@@ -1,5 +1,5 @@
 var path = require('path');
-var lookup = fis3.require('hook-commonjs/lookup.js');
+var lookup = fis.require('hook-commonjs/lookup.js');
 var resolver = require('./lib/resolver.js');
 var browserify = require('./lib/browserify.js');
 
