@@ -2,6 +2,8 @@
 
 fis3 对npm的node_modules模块的支持
 
+### 2.x 版本还未稳定， 有问题的先用1.x版本
+
 [demo](/demo)
 
 [![NPM version][npm-image]][npm-url]
@@ -11,7 +13,7 @@ fis3 对npm的node_modules模块的支持
 # Install
 
 ```bash
-npm install fis3-hook-node_modules -g
+npm install fis3-hook-node_modules@1.x -g
 ```
 
 暂时`process`, `buffer`等node全局变量的兼容还需手动安装依赖模块(之后会升级fis3已实现自动安装)
