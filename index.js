@@ -6,7 +6,7 @@ var browserify = require('./lib/browserify.js');
 function tryNpmLookUp(info, file, opts) {
     var id = info.rest;
 
-    if (/^([^\/]+)(?:\/(.*))?$/.test(id)) {
+    if (/^([^\/\{\}]+)(?:\/(.*))?$/.test(id)) {
         var prefix = RegExp.$1;
         var subpath = RegExp.$2;
 
@@ -17,6 +17,7 @@ function tryNpmLookUp(info, file, opts) {
         var currentPkg = resolver.resolveSelf(file.dirname);
         var pkg = resolver.resolvePkg(prefix, currentPkg && currentPkg.json.dependencies && currentPkg.json.dependencies[prefix] ? currentPkg.json.dependencies[prefix] : '*', file.dirname);
         if (!pkg) {
+            opts.shutup || fis.log.warn('Can\'t resolve `%s` in file [%s], did you miss `npm install %s`', prefix, file.subpath, prefix);
             return info;
         }
 
