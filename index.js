@@ -17,7 +17,9 @@ function tryNpmLookUp(info, file, opts) {
         var currentPkg = resolver.resolveSelf(file.dirname);
         var pkg = resolver.resolvePkg(prefix, currentPkg && currentPkg.json.dependencies && currentPkg.json.dependencies[prefix] ? currentPkg.json.dependencies[prefix] : '*', file.dirname);
         if (!pkg) {
-            opts.shutup || fis.log.warn('Can\'t resolve `%s` in file [%s], did you miss `npm install %s`?', prefix, file.subpath, prefix);
+            opts.shutup ||
+            currentPkg && currentPkg.json && currentPkg.json.browser && currentPkg.json.browser[prefix] ||
+            fis.log.warn('Can\'t resolve `%s` in file [%s], did you miss `npm install %s`?', prefix, file.subpath, prefix);
             return info;
         }
 
