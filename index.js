@@ -6,7 +6,7 @@ var browserify = require('./lib/browserify.js');
 function tryNpmLookUp(info, file, opts) {
     var id = info.rest;
 
-    if (/^([^\/\{\}]+)(?:\/(.*))?$/.test(id)) {
+    if (/^([a-zA-Z0-9@][a-zA-Z0-9@\.\-_]*)(?:\/([a-zA-Z0-9@\/\.\-_]*))?$/.test(id)) {
         var prefix = RegExp.$1;
         var subpath = RegExp.$2;
 
