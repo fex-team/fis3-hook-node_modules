@@ -4,20 +4,11 @@ fis3 对npm的node_modules模块的支持
 
 [![NPM version][npm-image]][npm-url]
 
-[![NPM][fis3-hook-node_modules]][nodei-url]
-
 # Install
 
 ```bash
 npm install fis3-hook-node_modules -g
 ```
-
-暂时`process`, `buffer`等node全局变量的兼容还需手动安装依赖模块(之后会升级fis3已实现自动安装)
-请安装至你的项目目录下面
-```bash
-npm install process buffer is-buffer --save
-```
-
 
 # Dependencies
 
@@ -47,10 +38,6 @@ fis.match('/{node_modules}/**.js', {
 fis.unhook('components')
 fis.hook('node_modules')
 ```
-
-## Tips
-
-`fis.hook('commonjs')` 一定要在 `fis.hook('node_modules')`之前, 否则会出现文件找不到的问题
 
 ### 如何使用私有npm模块
 私有npm模块可以放在内网的git仓库,也可以直接使用http地址安装
@@ -109,7 +96,7 @@ fis.match('*.scss', {
         fis.plugin('node-sass', {
             include_paths: [
                 'static/scss'
-            ] || []
+            ]
         })
     ],
     postprocessor: fis.plugin('autoprefixer')
