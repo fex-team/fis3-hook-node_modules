@@ -147,5 +147,6 @@ entry.defaultOptions = {
     // 1 merge 第三位版本相同的 1.1.x
     // 2 merge 第二位版本相同的 1.x
     // 3 只要包同名就会被 merge
-    mergeLevel: 1
+    mergeLevel: 1,
+    ignoreDevDependencies: false
 };
