@@ -141,8 +141,3 @@ fis.match('/client/index.jsx', {
     * `2` min 版本号一致则去重。相当于 `1.x`
     * `3` 忽略版本，只要包名一致则去重。
 * `ignoreDevDependencies` 默认为 `false` 标记是否忽略 devDependencies。
-
-[npm-url]: https://www.npmjs.com/package/fis3-hook-node_modules
-[npm-image]: https://img.shields.io/npm/v/fis3-hook-node_modules.svg
-[nodei-image]: https://nodei.co/npm/fis3-hook-node_modules.png?downloads=true&downloadRank=true&stars=true
-[nodei-url]: https://www.npmjs.com/package/fis3-hook-node_modules
