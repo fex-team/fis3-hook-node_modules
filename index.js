@@ -2,6 +2,7 @@ var path = require('path');
 var lookup = fis.require('hook-commonjs/lookup.js');
 var resolver = require('./lib/resolver.js');
 var browserify = require('./lib/browserify.js');
+var notified = {};
 
 function tryNpmLookUp(info, file, opts) {
     var id = info.rest;
@@ -102,7 +103,12 @@ function onFileLookUp2(info, file) {
 
     if (/^([a-zA-Z0-9@][a-zA-Z0-9@\.\-_]*)(?:\/([a-zA-Z0-9@\/\.\-_]*))?$/.test(id) && !info.file) {
         var prefix = RegExp.$1;
-        fis.log.warn('Can\'t resolve `%s` in file [%s], did you miss `npm install %s`?', id, file.subpath, prefix);
+        var key = file.subpath + id;
+        if (!notified[key]) {
+            notified[key] = true;
+            fis.log.warn('Can\'t resolve `%s` in file [%s], did you miss `npm install %s`?', id, file.subpath, prefix);
+        }
+
     }
 }
 
@@ -144,6 +150,7 @@ var entry = module.exports = function (fis, opts) {
 
     // 在编译之前才注册事件，应该比所有的 hook 都注册得晚。
     opts.shutup || fis.on('release:start', function() {
+        notified = {};
         fis.removeListener('lookup:file', onFileLookUp2);
         fis.on('lookup:file', onFileLookUp2);
     });
