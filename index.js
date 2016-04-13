@@ -498,7 +498,11 @@ function onFileLookUp (info, file) {
       filePath = path.join(file.dirname, rest);
     }
     else {
-      filePath = resolve.sync(rest, {basedir: moduleRoot})
+      try {
+        filePath = resolve.sync(rest, {basedir: moduleRoot})
+      } catch (e) {
+        fis.log.warning(e.message)
+      }
     }
 
     if (!filePath) {
