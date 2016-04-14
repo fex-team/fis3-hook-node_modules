@@ -254,6 +254,17 @@ function xorEqual (pre, next, fn) {
   return pre === next;
 }
 
+function getModuleNameFromId(id) {
+  if (/node_modules/.test(id)) {
+    var module_sec = id.split('node_modules').slice(-1);
+    var modulePath = module_sec[0];
+
+    return modulePath.split('/')[1];
+  }
+
+  return null;
+}
+
 function getEntrance (json, rest) {
   var main = json.main;
 
@@ -275,12 +286,20 @@ function getEntrance (json, rest) {
 
           var obj = {};
           var jsReg = /([\w\.\/]+).js$/;
-          var jsName = jsReg.exec(key)[1];
 
-          obj[jsName] = browser[key];
+          var jsName = jsReg.exec(key);
+
+          if (jsName) {
+            key = jsName[1];
+          }
+
+          obj[key] = browser[key];
 
           if (!browser[key] && indexOfCollection(disabled, obj) < 0) {
-            disabled.push(obj);
+            disabled.push({
+              module: json.name,
+              key: key
+            });
           }
           else if (indexOfCollection(replaced, obj) < 0) {
             replaced.push(obj);
@@ -533,15 +552,19 @@ function onPreprocess (file) {
     if (RegExp('\\b' + name + '\\b').test(content) && !(file.fullname.indexOf(name.toLowerCase()) >= 0)) {
       pushContent.push(vars[name](rest, basedir))
     }
-  })
+  });
 
   Object.keys(replaceVars).forEach(function (name) {
     content = content.replace(name, replaceVars[name](rest, basedir));
-  })
+  });
 
-  disabled.forEach(function (name) {
-    content = content.replace(new RegExp("require\\(\\s?['\"]" + name.replace('.', '\\.') + "['\"]\\s?\\)", "g"), '{}');
-  })
+
+  disabled.forEach(function (modules) {
+    var moduleName = getModuleNameFromId(file.id);
+    if (moduleName === modules.module) {
+      content = content.replace(new RegExp("require\\(\\s?['\"]" + modules.key.replace('.', '\\.') + "['\"]\\s?\\)", "g"), '{}');
+    }
+  });
 
   content = pushContent.join('\n') + '\n' + content;
 

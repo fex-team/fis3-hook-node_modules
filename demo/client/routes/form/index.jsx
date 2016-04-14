@@ -1,11 +1,14 @@
 import {Form, Input} from 'antd'
 import ReactDOM from 'react-dom'
 import React from 'react'
+import promise from 'es6-promise'
 
 const FormItem = Form.Item
 
 const Reports = (props) => {
 
+  promise.polyfill()
+  
   const { getFieldProps } = props.form;
 
   const emailProps = getFieldProps('email', {
