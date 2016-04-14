@@ -187,7 +187,7 @@ function getComponentsInfo (fis, opts) {
       // 重复版本的模块直接忽略
       if (indexOfCollection(moduleVersion[name], versionObj, 'version') < 0) {
         if (info.dependencies[name]) {
-          console.log(versionObj, info.dependencies[name]);
+          fis.log.warning('package ' + name + 'is being overwriten');
         }
         else {
           info.dependencies[name] = {
@@ -208,11 +208,14 @@ function getComponentsInfo (fis, opts) {
         // 根据是否存在于moduleVerions来判断是否已经找到相关模块
         // 还需要判断重复模块的版本
         var rootDependencies = rawSubDependencies.filter(function (sname) {
-          return (!moduleVersion[sname] && !checkPackageJSON(path.join(moduleRoot, 'node_modules', sname))) ||
-            (!checkPackageJSON(path.join(moduleRoot, 'node_modules', sname))
-              && semver.satisfies(moduleVersion[sname].version, json.dependencies[sname])
-            )
-        })
+          if (checkPackageJSON(path.join(moduleRoot, 'node_modules', sname))) {
+            return true;
+          }
+
+          if (moduleVersion[sname] && semver.satisfies(moduleVersion[sname].version, json.dependencies[sname])) {
+            return false;
+          }
+        });
 
         var subDependencies = _.difference(rawSubDependencies, rootDependencies);
 
@@ -240,7 +243,6 @@ function getComponentsInfo (fis, opts) {
 
 // 没有参数返回true, 有则进行判断
 function xorEqual (pre, next, fn) {
-  console.log(pre, next)
   if (!pre) {
     return true;
   }
@@ -370,10 +372,6 @@ function createPath (dirname) {
       }
       else {
         module = componentsInfo.dependencies[moduleName];
-      }
-
-      if (moduleName === 'async-validator') {
-
       }
 
       var moduleVersion = module.version;
