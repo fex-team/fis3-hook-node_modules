@@ -2,6 +2,7 @@ var path = require('path');
 var lookup = fis.require('hook-commonjs/lookup.js');
 var resolver = require('./lib/resolver.js');
 var browserify = require('./lib/browserify.js');
+var notified = {};
 
 function tryNpmLookUp(info, file, opts) {
     var id = info.rest;
@@ -10,16 +11,9 @@ function tryNpmLookUp(info, file, opts) {
         var prefix = RegExp.$1;
         var subpath = RegExp.$2;
 
-        if (prefix[0] === '.') {
-            return info;
-        }
-
         var currentPkg = resolver.resolveSelf(file.dirname);
         var pkg = resolver.resolvePkg(prefix, currentPkg && currentPkg.json.dependencies && currentPkg.json.dependencies[prefix] ? currentPkg.json.dependencies[prefix] : '*', file.dirname);
         if (!pkg) {
-            opts.shutup ||
-            currentPkg && currentPkg.json && currentPkg.json.browser && currentPkg.json.browser[prefix] ||
-            fis.log.warn('Can\'t resolve `%s` in file [%s], did you miss `npm install %s`?', prefix, file.subpath, prefix);
             return info;
         }
 
@@ -103,6 +97,20 @@ function onFileLookUp(info, file) {
     }
 };
 
+// 最后一个响应函数。
+function onFileLookUp2(info, file) {
+    var id = info.rest;
+
+    if (/^([a-zA-Z0-9@][a-zA-Z0-9@\.\-_]*)(?:\/([a-zA-Z0-9@\/\.\-_]*))?$/.test(id) && !info.file) {
+        var prefix = RegExp.$1;
+        var key = file.subpath + id;
+        if (!notified[key]) {
+            notified[key] = true;
+            fis.log.warn('Can\'t resolve `%s` in file [%s], did you miss `npm install %s`?', id, file.subpath, prefix);
+        }
+
+    }
+}
 
 function onPreprocess(file) {
     if (!file.isJsLike || !file.isMod || file.skipBrowserify) {
@@ -117,6 +125,8 @@ function onPreprocess(file) {
 
     file.setContent(browserify(file.getContent(), file));
 }
+
+
 
 var entry = module.exports = function (fis, opts) {
     resolver.init(opts);
@@ -137,6 +147,13 @@ var entry = module.exports = function (fis, opts) {
     fis.on('process:start', onPreprocess);
     fis.on('release:end', function() {
         resolver.clearCache();
+    });
+
+    // 在编译之前才注册事件，应该比所有的 hook 都注册得晚。
+    opts.shutup || fis.on('release:start', function() {
+        notified = {};
+        fis.removeListener('lookup:file', onFileLookUp2);
+        fis.on('lookup:file', onFileLookUp2);
     });
 
     fis.set('component.type', 'node_modules');
