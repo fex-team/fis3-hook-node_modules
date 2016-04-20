@@ -142,6 +142,7 @@ fis.match('/client/index.jsx', {
     * `3` 忽略版本，只要包名一致则去重。
 * `ignoreDevDependencies` 默认为 `false` 标记是否忽略 devDependencies。
 * `shimBuffer` 默认为 `true` 自动检测 js 内容，存在 buffer 的调用，自动添加 buffer 的 shim 模块。（有些插件并不适用）
+* `env` 默认在代码压缩的情况下为 `production` 否则为 `development`。 支持配置或者回调函数。 
 
 [npm-url]: https://www.npmjs.com/package/fis3-hook-node_modules
 [npm-image]: https://img.shields.io/npm/v/fis3-hook-node_modules.svg
