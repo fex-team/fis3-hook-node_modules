@@ -140,6 +140,8 @@ fis.match('/client/index.jsx', {
     * `1` patch 版本号一致则去重。相当于 `1.1.x`
     * `2` min 版本号一致则去重。相当于 `1.x`
     * `3` 忽略版本，只要包名一致则去重。
+* `ignoreDevDependencies` 忽略 dev 依赖
+* `shimBuffer` 默认为 `true` 自动检测 js 内容，存在 buffer 的调用，自动添加 buffer 的 shim 模块。（有些插件并不适用）
 
 [npm-url]: https://www.npmjs.com/package/fis3-hook-node_modules
 [npm-image]: https://img.shields.io/npm/v/fis3-hook-node_modules.svg

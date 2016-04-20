@@ -120,6 +120,7 @@ function onPreprocess(file) {
 
 var entry = module.exports = function (fis, opts) {
     resolver.init(opts);
+    browserify.init(opts);
 
     lookup.lookupList = [
         lookup.tryFisIdLookUp,
@@ -148,5 +149,6 @@ entry.defaultOptions = {
     // 2 merge 第二位版本相同的 1.x
     // 3 只要包同名就会被 merge
     mergeLevel: 1,
-    ignoreDevDependencies: false
+    ignoreDevDependencies: false,
+    shimBuffer: true
 };
