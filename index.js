@@ -101,7 +101,7 @@ function onFileLookUp(info, file) {
 function onFileLookUp2(info, file) {
     var id = info.rest;
 
-    if (/^([a-zA-Z0-9@][a-zA-Z0-9@\.\-_]*)(?:\/([a-zA-Z0-9@\/\.\-_]*))?$/.test(id) && !info.file) {
+    if (/^([a-zA-Z0-9@][a-zA-Z0-9@\.\-_]*)(?:\/([a-zA-Z0-9@\/\.\-_]*))?$/.test(id) && !info.file && !info.isFISID) {
         var prefix = RegExp.$1;
         var key = file.subpath + id;
         if (!notified[key]) {
