@@ -135,7 +135,7 @@ fis.match('/client/index.jsx', {
 
 ## 配置项说明
 
-* `mergeLevel` 默认 `1` npm 包去重。
+* `mergeLevel` npm 包去重级别， node 版本小于 5 时默认为 `1` 否则默认为 `0`， npm 3+ 不需要去重。
     * `0` 如果版本完全一致则去重。
     * `1` patch 版本号一致则去重。相当于 `1.1.x`
     * `2` min 版本号一致则去重。相当于 `1.x`
