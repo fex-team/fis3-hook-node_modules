@@ -11,7 +11,7 @@ function tryNpmLookUp(info, file, opts) {
         var prefix = RegExp.$1;
         var subpath = RegExp.$2;
 
-        var currentPkg = resolver.resolveSelf(file.dirname);
+        var currentPkg = file ? resolver.resolveSelf(file.dirname) : null;
         var pkg = resolver.resolvePkg(prefix, currentPkg && currentPkg.json.dependencies && currentPkg.json.dependencies[prefix] ? currentPkg.json.dependencies[prefix] : '*', file.dirname);
         if (!pkg) {
             return info;
@@ -55,7 +55,7 @@ function tryNpmLookUp(info, file, opts) {
 // npm browser 为 object,
 // 包内部的相对引用
 function onFileLookUp(info, file) {
-    var pkg = resolver.resolveSelf(file.dirname);
+    var pkg = file ? resolver.resolveSelf(file.dirname) : null;
     if (pkg && pkg.json.browser && typeof pkg.json.browser === 'object') {
         var name = info.rest;
         name = name[0] === '.' ? path.join(path.relative(pkg.dirname, file.dirname), name) : name;
