@@ -113,7 +113,7 @@ function onFileLookUp2(info, file) {
 }
 
 function onPreprocess(file) {
-    if (!file.isJsLike || !file.isMod || file.skipBrowserify) {
+    if (!file.isText() || !file.isJsLike || !file.isMod || file.skipBrowserify) {
         return;
     }
 
