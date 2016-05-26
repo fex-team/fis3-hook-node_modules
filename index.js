@@ -11,6 +11,17 @@ function tryNpmLookUp(info, file, opts) {
         var prefix = RegExp.$1;
         var subpath = RegExp.$2;
 
+        if (prefix[0] === '@') {
+            var idx = subpath.indexOf('/');
+            if (~idx) {
+                prefix += '/' + subpath.substring(0, idx);
+                subpath = subpath.substring(idx + 1);
+            } else {
+                prefix += '/' + subpath;
+                subpath = '';
+            }
+        }
+
         var currentPkg = file ? resolver.resolveSelf(file.dirname) : null;
         var pkg = resolver.resolvePkg(prefix, currentPkg && currentPkg.json.dependencies && currentPkg.json.dependencies[prefix] ? currentPkg.json.dependencies[prefix] : '*', file.dirname);
         if (!pkg) {
@@ -112,7 +123,10 @@ function onFileLookUp2(info, file) {
     }
 }
 
-function onPreprocess(file) {
+function onJsStandard(info) {
+    var content = info.content;
+    var file = info.file;
+
     if (!file.isText() || !file.isJsLike || !file.isMod || file.skipBrowserify) {
         return;
     }
@@ -123,7 +137,8 @@ function onPreprocess(file) {
         return;
     }
 
-    file.setContent(browserify(file.getContent(), file));
+    info.content = browserify(info.content, file);
+    // file.setContent(browserify(file.getContent(), file));
 }
 
 
@@ -144,7 +159,7 @@ var entry = module.exports = function (fis, opts) {
     ];
 
     fis.on('lookup:file', onFileLookUp);
-    fis.on('process:start', onPreprocess);
+    fis.on('standard:js', onJsStandard);
     fis.on('release:end', function() {
         resolver.clearCache();
     });
