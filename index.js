@@ -119,14 +119,10 @@ function onFileLookUp2(info, file) {
             notified[key] = true;
             fis.log.warn('Can\'t resolve `%s` in file [%s], did you miss `npm install %s`?', id, file.subpath, prefix);
         }
-
     }
 }
 
-function onJsStandard(info) {
-    var content = info.content;
-    var file = info.file;
-
+function onJsStandard(file) {
     if (!file.isText() || !file.isJsLike || !file.isMod || file.skipBrowserify) {
         return;
     }
@@ -137,8 +133,7 @@ function onJsStandard(info) {
         return;
     }
 
-    info.content = browserify(info.content, file);
-    // file.setContent(browserify(file.getContent(), file));
+    file.setContent(browserify(file.getContent(), file));
 }
 
 
@@ -159,7 +154,7 @@ var entry = module.exports = function (fis, opts) {
     ];
 
     fis.on('lookup:file', onFileLookUp);
-    fis.on('standard:js', onJsStandard);
+    fis.on('compile:standard', onJsStandard);
     fis.on('release:end', function() {
         resolver.clearCache();
     });
