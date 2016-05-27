@@ -44,7 +44,7 @@ function tryNpmLookUp(info, file, opts) {
                         path.join(name + '.js') === path.join(key) ||
                         path.join(name) === path.join(key + '.js')
                     ) {
-                        name = key === false ? 'this_should_be_null' : redirectTo;
+                        name = redirectTo === false ? 'this_should_be_null' : redirectTo;
                         return false;
                     }
 
@@ -82,7 +82,7 @@ function onFileLookUp(info, file) {
                 path.join(name + '.js') === path.join(key) ||
                 path.join(name) === path.join(key + '.js')
             ) {
-                newname = key === false ? 'this_should_be_null' : redirectTo;
+                newname = redirectTo === false ? 'this_should_be_null' : redirectTo;
                 return false;
             }
 
