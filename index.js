@@ -3,6 +3,8 @@ var lookup = fis.require('hook-commonjs/lookup.js');
 var resolver = require('./lib/resolver.js');
 var browserify = require('./lib/browserify.js');
 var notified = {};
+var rRequireNull = /\brequire\s*\(\s*('|")this_should_be_null\1\s*\)/ig;
+
 
 function tryNpmLookUp(info, file, opts) {
     var id = info.rest;
@@ -155,6 +157,13 @@ var entry = module.exports = function (fis, opts) {
 
     fis.on('lookup:file', onFileLookUp);
     fis.on('compile:standard', onJsStandard);
+    fis.on('compile:postprocessor', function(file) {
+        if (!file.isText() || !file.isJsLike) {
+            return;
+        }
+
+        file.setContent(file.getContent().replace(rRequireNull, '{}'));
+    });
     fis.on('release:end', function() {
         resolver.clearCache();
     });
