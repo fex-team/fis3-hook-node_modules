@@ -111,10 +111,10 @@ function onFileLookUp(info, file) {
 };
 
 // 最后一个响应函数。
-function onFileLookUp2(info, file) {
+function onFileLookUp2(info, file, silent) {
     var id = info.rest;
 
-    if (/^([a-zA-Z0-9@][a-zA-Z0-9@\.\-_]*)(?:\/([a-zA-Z0-9@\/\.\-_]*))?$/.test(id) && !info.file && !info.isFISID) {
+    if (!silent && /^([a-zA-Z0-9@][a-zA-Z0-9@\.\-_]*)(?:\/([a-zA-Z0-9@\/\.\-_]*))?$/.test(id) && !info.file && !info.isFISID) {
         var prefix = RegExp.$1;
         var key = file.subpath + id;
         if (!notified[key]) {
