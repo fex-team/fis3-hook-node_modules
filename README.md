@@ -148,3 +148,16 @@ fis.match('/client/index.jsx', {
 [npm-image]: https://img.shields.io/npm/v/fis3-hook-node_modules.svg
 [nodei-image]: https://nodei.co/npm/fis3-hook-node_modules.png?downloads=true&downloadRank=true&stars=true
 [nodei-url]: https://www.npmjs.com/package/fis3-hook-node_modules
+
+
+## 文件属性说明
+
+* `skipBrowserify` 默认模块化的 js 都会进行 browserify 处理，如果文件的这个属性设置成了 true, 则会跳过。 如：
+    
+    ```js
+    fis.match('/modules/**.js', {
+      skipBrowserify: true
+    })
+    ```
+    
+    一般自己写的代码都不需要这个处理。
