@@ -116,6 +116,10 @@ function onFileLookUp2(info, file, silent) {
 
     if (!silent && /^([a-zA-Z0-9@][a-zA-Z0-9@\.\-_]*)(?:\/([a-zA-Z0-9@\/\.\-_]*))?$/.test(id) && !info.file && !info.isFISID) {
         var prefix = RegExp.$1;
+        if (prefix[0] === '@') {
+            prefix = id.split('/').slice(0, 2).join('/');
+        }
+
         var key = file.subpath + id;
         if (!notified[key]) {
             notified[key] = true;
@@ -186,5 +190,8 @@ entry.defaultOptions = {
     // 3 只要包同名就会被 merge
     mergeLevel: parseInt(process.versions.node) < 5 ? 1 : 0,
     ignoreDevDependencies: false,
-    shimBuffer: true
+    shimBuffer: true,
+    shimProcess: true,
+    shimGlobal: true,
+    shutup: false
 };
