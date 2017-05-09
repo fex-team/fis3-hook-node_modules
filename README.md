@@ -84,9 +84,12 @@ fis.match('{*.{es,jsx},/client/**.js}', {
     rExt: 'js',
     isMod: true,
     useSameNameRequire: true,
-    parser: fis.plugin('babel-5.x', {}, {
+    parser: fis.plugin('babel-5.x', {
         presets: ["es2015", "react", "stage-0"]
     })
+    
+    // 或者用 typescript 编译也可以。
+    // parser: fis.plugin('typescript')
 });
 
 // 用 node-sass 解析
