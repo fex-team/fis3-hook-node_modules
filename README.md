@@ -68,7 +68,7 @@ npm install git+https://github.com/jashkenas/backbone --save
 ### 基本的配置
 
 
-```
+```js
 fis.hook('commonjs', {
     baseUrl: './client',
     extList: ['.js', '.jsx', '.es', '.ts', '.tsx']
