@@ -60,7 +60,17 @@ function tryNpmLookUp(info, file, opts) {
             info.skipLoopUp = true;
             return info;
         } else {
-            return lookup.findResource(name, pkg.dirname, opts.extList);
+            var ret = lookup.findResource(name, pkg.dirname, opts.extList);
+
+            if (!ret.file) {
+                var pkgFile = fis.uri(path.join(name, 'package.json'), pkg.dirname, []);
+                if (pkgFile.file) {
+                    var json = fis.util.readJSON(pkgFile.file.fullname);
+                    ret = lookup.findResource(json.main || 'index', pkgFile.file.dirname, opts.extList);
+                }
+            }
+
+            return ret;
         }
     }
 }
