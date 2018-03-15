@@ -31,7 +31,7 @@ function tryNpmLookUp(info, file, opts) {
         }
 
         var json = pkg.json;
-        var name = subpath || json.main || 'index.js';
+        var name = subpath || json.main || json.module || 'index.js';
 
         if (json.browser) {
             if (typeof json.browser === 'string' && !subpath) {
@@ -66,7 +66,7 @@ function tryNpmLookUp(info, file, opts) {
                 var pkgFile = fis.uri(path.join(name, 'package.json'), pkg.dirname, []);
                 if (pkgFile.file) {
                     var json = fis.util.readJSON(pkgFile.file.fullname);
-                    ret = lookup.findResource(json.main || 'index', pkgFile.file.dirname, opts.extList);
+                    ret = lookup.findResource(json.main || json.module || 'index', pkgFile.file.dirname, opts.extList);
                 }
             }
 
@@ -200,8 +200,8 @@ entry.defaultOptions = {
     // 3 只要包同名就会被 merge
     mergeLevel: parseInt(process.versions.node) < 5 ? 1 : 0,
     ignoreDevDependencies: false,
-    shimBuffer: true,
-    shimProcess: true,
-    shimGlobal: true,
+    shimBuffer: false,
+    shimProcess: false,
+    shimGlobal: false,
     shutup: false
 };
