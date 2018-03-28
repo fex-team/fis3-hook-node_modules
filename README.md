@@ -144,9 +144,9 @@ fis.match('/client/index.jsx', {
     * `2` min 版本号一致则去重。相当于 `1.x`
     * `3` 忽略版本，只要包名一致则去重。
 * `ignoreDevDependencies` 默认为 `false` 标记是否忽略 devDependencies。
-* `shimProcess` 默认为 `true` 自动检测 js 内容，存在 process 的调用，自动添加 `var process = require('process/browser')` 的 shim 模块。（有些插件并不适用）
-* `shimGlobal` 默认为 `true` 自动检测 js 内容，存在 global 的调用，自动添加 global 的 shim 代码。（有些插件并不适用）
-* `shimBuffer` 默认为 `true` 自动检测 js 内容，存在 buffer 的调用，自动添加 buffer 的 shim 模块。（有些插件并不适用）
+* `shimProcess` 默认为 `false` 自动检测 js 内容，存在 process 的调用，自动添加 `var process = require('process/browser')` 的 shim 模块。（有些插件并不适用）
+* `shimGlobal` 默认为 `false` 自动检测 js 内容，存在 global 的调用，自动添加 global 的 shim 代码。（有些插件并不适用）
+* `shimBuffer` 默认为 `false` 自动检测 js 内容，存在 buffer 的调用，自动添加 buffer 的 shim 模块。（有些插件并不适用）
 * `env` 默认在代码压缩的情况下为 `production` 否则为 `development`。 支持配置或者回调函数。
 * `shutup` 默认为 `false` 可以设置不提示模块没找到。
 
