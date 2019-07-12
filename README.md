@@ -27,7 +27,7 @@ fis.hook('commonjs', {
 
 为node_modules文件添加针对mod.js的转换
 ```js
-fis.match('/{node_modules}/**.js', {
+fis.match('/node_modules/**.js', {
     isMod: true,
     useSameNameRequire: true
 });
